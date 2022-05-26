@@ -20,19 +20,19 @@ YMARGIN = int((WINDOWHEIGHT - BOARDHEIGHT * SPACESIZE) / 2)
 
 XRightSide = WINDOWWIDTH - XMARGIN
 YBottomSide = WINDOWHEIGHT - YMARGIN
-WHITE = [255, 255, 255]
-BGCOLOR = [70,70,70]
+WHITE = (255, 255, 255)
+BGCOLOR = (70,70,70)
 
 listception = []
 for x in range(BOARDWIDTH):
         listception.append([])
         for y in range(BOARDHEIGHT):
                 listception[x].append([randint(0,0),randint(0,150),randint(200,255)])
-                if listception[x]>0 and listception[x-1][y][1] < listception[x][y][1] :
-                        if listception[x][y][1] - (listception[x-1][y][1]) > 6:
-                                listception[x][y][1] +=6
-                                if listception[x][y][1] > 150:
-                                        listception[x][y][1] = listception[x][y][1] -150
+                # if listception[x]>0 and listception[x-1][y][1] < listception[x][y][1] :
+                #         if listception[x][y][1] - (listception[x-1][y][1]) > 6:
+                #                 listception[x][y][1] +=6
+                #                 if listception[x][y][1] > 150:
+                #                         listception[x][y][1] = listception[x][y][1] -150
 
 
 
@@ -147,8 +147,6 @@ class Object():
 
 
 
-
-
 def main():
     CurrentItem = 0
     NewItem = False
@@ -159,14 +157,12 @@ def main():
 
         xp, yp = pygame.mouse.get_pos()
 
-
-
         for event in pygame.event.get():
-
             if event.type == QUIT:
                 pygame.quit()
                 sys.exit()
             if event.type == MOUSEBUTTONDOWN and event.button == 3:
+                #print objectList
                 if NewItem == True:
                     NewItem = False
                 else:
@@ -188,10 +184,10 @@ def main():
 
                 if event.type == MOUSEBUTTONDOWN and event.button == 1:
                     Occupied = False
-                    SwitchSpot = True
+                    ObjectSwitch = True
+                    ObjectInSpot = 0
 
                     if NewItem:
-                        ObjectInSpot = 0
                         currentList = copy.deepcopy(itemList[CurrentItem][0])
                         objectList.append(Object())
                         objectList[-1].func(xp,yp,XSelect,YSelect,copy.deepcopy(itemList[CurrentItem][0]), currentList, itemList[CurrentItem][1],CurrentItem)
@@ -202,101 +198,118 @@ def main():
                             SpotY = (spot[1] + Obj.row)
 
                             if (SpotX > -1 and SpotX < BOARDWIDTH) and (SpotY > -1 and SpotY < BOARDHEIGHT):
-                                if boardList[SpotX][SpotY] != 0:
-                                    if ObjectInSpot == 0:
-                                        ObjectInSpot = boardList[SpotX][SpotY]
 
-                                    elif ObjectInSpot != boardList[SpotX][SpotY]:
-                                        SwitchSpot = False
-                                    else:
-                                        Occupied = True
-                                        print "NEIN!"
+                                if boardList[SpotX][SpotY] != 0:
+                                    Occupied = True
+
+                                if ObjectInSpot == 0:
+                                    ObjectInSpot = boardList[SpotX][SpotY]
+
+                                if ((ObjectInSpot != boardList[SpotX][SpotY]) and (ObjectInSpot != 0)) and boardList[SpotX][SpotY] != 0:
+                                    ObjectSwitch = False
+                                    Occupied = True
+                                    #print "NEIN!"
+
+                                #print ObjectInSpot
+
+                                # if ObjectInSpot == boardList[SpotX][SpotY] and ObjectInSpot != 0:
+                                #     ObjectSwitch = True
+
+                                # if ObjectInSpot == 0:
+                                #     ObjectSwitch = False
+
                             else:
                                 Occupied = True
-                                print "NIEMALS!"
+                                ObjectSwitch = False
+                                #print "NIEMALS!"
 
 
+
+
+                        #Placing New Object
                         if Occupied == False:
-                            if SwitchSpot == False:
-                                count = 0
-                                for spot in Obj.SpotList:
-                                    SpotX = (spot[0] + Obj.column)
-                                    SpotY = (spot[1] + Obj.row)
+                            count = 0
+                            for spot in Obj.SpotList:
+                                SpotX = (spot[0] + Obj.column)
+                                SpotY = (spot[1] + Obj.row)
 
-                                    boardList[SpotX][SpotY] = Obj
+                                boardList[SpotX][SpotY] = Obj
 
-                                    Obj.Map[count][0] = SpotX
-                                    Obj.Map[count][1] = SpotY
+                                Obj.Map[count][0] = SpotX
+                                Obj.Map[count][1] = SpotY
 
-                                    count += 1
-                                    NewItem = False
-
-
+                                count += 1
+                                NewItem = False
 
                         else:
                             del objectList[-1]
 
+
+
+
+                    #Picking Up Object
                     elif NewItem == False:
-                        column = (xp - XMARGIN)/SPACESIZE
-                        row    = (yp - YMARGIN)/SPACESIZE
+                        column = (int)((xp - XMARGIN)/SPACESIZE)
+                        row    = (int)((yp - YMARGIN)/SPACESIZE)
 
-                        if boardList[column][row] != 0:
-                            Map = boardList[column][row].Map
-                            for spot in Map:
+                        Map = boardList[column][row].Map
+                        for spot in Map:
+                            ExiledObject = boardList[spot[0]][spot[1]]
+                            boardList[spot[0]][spot[1]] = 0
 
-                                ExiledObject = boardList[spot[0]][spot[1]]
-                                boardList[spot[0]][spot[1]] = 0
-
-                            ExiledIndex = objectList.index(ExiledObject)
-                            NewItem = True
-                            CurrentItem = ExiledObject.Index
-                            del objectList[ExiledIndex]
+                        ExiledIndex = objectList.index(ExiledObject)
+                        NewItem = True
+                        CurrentItem = ExiledObject.Index
+                        del objectList[ExiledIndex]
 
 
 
 
+                    #Switching Objects
+                    if Occupied == True and ObjectSwitch == True:
+                        for spot in Obj.SpotList:
+                            SpotX = (spot[0] + Obj.column)
+                            SpotY = (spot[1] + Obj.row)
+                            if boardList[SpotX][SpotY] != 0:
+                                Map = boardList[SpotX][SpotY].Map
+
+                        column = (xp - XMARGIN) / SPACESIZE
+                        row = (yp - YMARGIN) / SPACESIZE
 
 
-                    elif NewItem == True:
-                        if Occupied == False:
-                            if SwitchSpot == True:
+                        for spot in Map:
+                            ExiledObject = boardList[spot[0]][spot[1]]
+                            boardList[spot[0]][spot[1]] = 0
 
-                                column = (xp - XMARGIN) / SPACESIZE
-                                row = (yp - YMARGIN) / SPACESIZE
-
-                                if boardList[column][row] != 0:
-                                    Map = boardList[column][row].Map
-                                    for spot in Map:
-                                        ExiledObject = boardList[spot[0]][spot[1]]
-                                        boardList[spot[0]][spot[1]] = 0
+                        ExiledIndex = objectList.index(ExiledObject)
 
 
-                                count = 0
-                                for spot in Obj.SpotList:
-                                    SpotX = (spot[0] + Obj.column)
-                                    SpotY = (spot[1] + Obj.row)
+                        CurrentItemTemp = ExiledObject.Index
+                        del objectList[ExiledIndex]
 
-                                    boardList[SpotX][SpotY] = Obj
+                        objectList.append(Object())
+                        objectList[-1].func(xp, yp, XSelect, YSelect, copy.deepcopy(itemList[CurrentItem][0]),currentList, itemList[CurrentItem][1], CurrentItem)
+                        Obj = objectList[-1]
 
-                                    Obj.Map[count][0] = SpotX
-                                    Obj.Map[count][1] = SpotY
+                        count = 0
+                        for spot in Obj.SpotList:
+                            SpotX = (spot[0] + Obj.column)
+                            SpotY = (spot[1] + Obj.row)
 
-                                    count += 1
+                            boardList[SpotX][SpotY] = Obj
 
+                            Obj.Map[count][0] = SpotX
+                            Obj.Map[count][1] = SpotY
 
+                            count += 1
 
+                        #currentList = copy.deepcopy(itemList[CurrentItem][0])
 
-
-
-                                    ExiledIndex = objectList.index(ExiledObject)
-                                    NewItem = True
-                                    CurrentItem = ExiledObject.Index
-                                    del objectList[ExiledIndex]
+                        CurrentItem = CurrentItemTemp
 
 
 
-
-
+                        NewItem = True
 
 
 
@@ -309,8 +322,10 @@ def main():
             for obj in objectList:
                 DISPLAYSURF.blit(obj.Pic, (obj.posX, obj.posY))
 
+
+        #xh, yh = hoverPlace(CurrentItem)
         if NewItem == True:
-            DISPLAYSURF.blit(itemList[CurrentItem][1], (xp - xh, yp - yh))
+            DISPLAYSURF.blit(itemList[CurrentItem][1], (xp -xh, yp -yh))
 
         pygame.display.update()
 
